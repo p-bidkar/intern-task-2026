@@ -1,7 +1,16 @@
 """FastAPI application -- language feedback endpoint."""
 
+import logging
+import uuid
+
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
 
 from app.feedback import get_feedback
 from app.models import FeedbackRequest, FeedbackResponse
@@ -13,6 +22,14 @@ app = FastAPI(
     description="Analyzes learner-written sentences and provides structured language feedback.",
     version="1.0.0",
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc), "request_id": str(uuid.uuid4())},
+    )
 
 
 @app.get("/health")
